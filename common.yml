@@ -1,0 +1,26 @@
+version: '2.4'
+
+services:
+  backend_base:
+    build: 
+      dockerfile: ./compose/backend/Dockerfile
+      context: .
+    image: backend
+    restart: unless-stopped
+    volumes:
+      - ./mounts/uwsgi:/uwsgi
+      - ./mounts/logs:/webapp/logs
+      - ./mounts/media:/webapp/media
+      - ./mounts/db:/webapp/db
+      - ./mounts/static:/webapp/static
+      - ./mounts/ipython_data:/root/.ipython/profile_default
+    environment:
+      REDIS_HOST: redis
+    command: /commands/web.sh
+    env_file: .backend.env
+
+  backend_celery_base:
+    extends:
+      service: backend_base
+    environment:
+      C_FORCE_ROOT: 1
