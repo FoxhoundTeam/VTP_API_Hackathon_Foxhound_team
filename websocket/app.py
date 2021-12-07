@@ -224,6 +224,7 @@ def send_message(data, method, client):
     data = {
         'client': client,
         'payload': data,
+        'method': method,
     }
     if callback:
         requests.post(callback.callback_url, json=data, headers=json.loads(callback.headers))

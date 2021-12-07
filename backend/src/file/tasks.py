@@ -21,13 +21,14 @@ def check_file(id):
     file_obj.status = status
     file_obj.dttm_end_check = datetime.now()
     file_obj.save()
+    send_file_link_to_proxy(file_obj.id, status=status)
     
 @app.task
-def send_file_link_to_proxy(id):
+def send_file_link_to_proxy(id, status='P'):
     for proxy in FilesProxy.objects.all():
         requests.post(
             proxy.proxy_url, 
-            json={'url': f'{settings.EXTERNAL_HOST.rstrip("/")}/rest_api/file/{id}/'},
+            json={'url': f'{settings.EXTERNAL_HOST.rstrip("/")}/rest_api/file/{id}/', 'status': status},
             headers=json.loads(proxy.headers)
         )
 
