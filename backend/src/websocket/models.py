@@ -23,12 +23,32 @@ class WebSocketSchema(models.Model):
         super().save(*args, **kwargs)
 
 class WebSocketViolation(models.Model):
+    TYPE_BAD_ORIGIN = 'BO'
+    TYPE_BAD_METHOD = 'BM'
+    TYPE_SQL_INJECTION = 'SI'
+    TYPE_XSS = 'X'
+    TYPE_BAD_WORD = 'BW'
+    TYPE_INVALID_FORMAT = 'IF'
+    TYPE_UNKNOWN_ECXEPTION = 'U'
+
+    TYPES = [
+        (TYPE_BAD_ORIGIN, 'Bad origin'),
+        (TYPE_BAD_METHOD, 'Bad method'),
+        (TYPE_SQL_INJECTION, 'SQL injection'),
+        (TYPE_XSS, 'XSS attack'),
+        (TYPE_BAD_WORD, 'Bad word'),
+        (TYPE_INVALID_FORMAT, 'Invalid message format'),
+        (TYPE_UNKNOWN_ECXEPTION, 'Unknown exception'),
+    ]
+
     dttm = models.DateTimeField()
     dttm_added = models.DateTimeField(auto_now_add=True)
     dttm_modified = models.DateTimeField(auto_now=True)
-    message = models.TextField()
+    message = models.TextField(null=True, blank=True)
+    error_message = models.TextField()
     source = models.CharField(max_length=1024)
     client = models.TextField()
+    type = models.CharField(max_length=2, choices=TYPES, default=TYPE_UNKNOWN_ECXEPTION)
 
 class WebSocketCallback(models.Model):
 

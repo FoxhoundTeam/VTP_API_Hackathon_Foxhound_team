@@ -47,17 +47,16 @@ export default {
       show: true,
     };
   },
-  beforeMount() {
-    this.violation = {
-      ...this.$store.state.violations[
-        this.$store.state.violations.findIndex(
-          (v) => v.id == this.$route.params.id
-        )
-      ],
-    };
-    if (!this.violation) {
-      this.closeModal();
-    }
+  computed: {
+    violation() {
+      return {
+        ...this.$store.state.violations[
+          this.$store.state.violations.findIndex(
+            (v) => v.id == this.$route.params.id
+          )
+        ],
+      };
+    },
   },
   methods: {
     closeModal() {

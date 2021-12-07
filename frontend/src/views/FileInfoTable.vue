@@ -9,7 +9,7 @@
       @click:row="
         (row) =>
           $router.push({
-            name: 'ViolationView',
+            name: 'FileInfoView',
             query: {
               ...$route.query,
             },
@@ -23,7 +23,7 @@
         <v-row>
           <v-col cols="4">
             <v-toolbar-title class="ml-5 mt-3"
-              >WebSocket нарушения</v-toolbar-title
+              >Файловые проверки</v-toolbar-title
             >
           </v-col>
           <v-col cols="8">
@@ -34,12 +34,20 @@
                 v-model="search"
               ></v-text-field>
               <filter-date v-model="dates"></filter-date>
+              <v-checkbox
+                label="Только нарушения"
+                dense
+                v-model="onlyViolations"
+                class="mr-2"
+              />
             </div>
           </v-col>
         </v-row>
       </template>
-      <template v-slot:item.type="{item}">
-        <span>{{types[item.type]}}</span>
+      <template v-slot:item.status="{ item }">
+        <v-icon :color="status_icon_and_color[item.status][1]">{{
+          status_icon_and_color[item.status][0]
+        }}</v-icon>
       </template>
     </v-data-table>
     <router-view />
@@ -53,26 +61,23 @@ export default {
   data() {
     return {
       search: "",
-      types: {
-        BO: "Bad origin",
-        BM: "Bad method",
-        SI: "SQL injection",
-        X: "XSS attack",
-        BW: "Bad word",
-        IF: "Invalid message format",
-        U: "Unknown exception",
+      status_icon_and_color: {
+        P: ["mdi-progress-clock", "orange"],
+        O: ["done", "green"],
+        E: ["error", "orange"],
+        V: ["warning", "red"],
       },
       headers: [
         {
-          text: "Время",
-          value: "dttm",
+          text: "Время загрузки",
+          value: "dttm_loaded",
         },
         {
-          text: "Тип",
-          value: "type",
+          text: "Тип файла",
+          value: "file_type",
         },
-        { text: "Клиент", value: "client" },
         { text: "IP адрес", value: "source" },
+        { text: "Статус", value: "status" },
       ],
     };
   },
@@ -85,18 +90,34 @@ export default {
         this.$store.commit("setDates", value);
       },
     },
+    onlyViolations: {
+      get() {
+        return this.$route.query.onlyViolations == 'true';
+      },
+      set(value) {
+        this.$router.replace({
+          name: this.$route.name,
+          query: {
+            ...this.$route.query,
+            onlyViolations: String(value),
+          },
+        });
+      },
+    },
     filtereditems() {
-      return this.$store.state.violations.filter((item) => {
+      let _this = this;
+      return this.$store.state.fileInfos.filter((item) => {
         return (
           item.source.toLowerCase().match(this.search.toLowerCase()) ||
-          item.client.toLowerCase().match(this.search.toLowerCase())
-        );
+          item.client.toLowerCase().match(this.search.toLowerCase()) ||
+          item.name.toLowerCase().match(this.search.toLowerCase())
+        ) && (_this.onlyViolations ? item.status == 'V': true);
       });
     },
   },
   watch: {
     async dates() {
-      await this.$store.dispatch("setViolations");
+      await this.$store.dispatch("setFileInfo");
       if (
         this.$route.query.dt_from == this.dates[0] &&
         this.$route.query.dt_to == this.dates[1]
@@ -113,7 +134,7 @@ export default {
     },
   },
   async mounted() {
-    if (!this.$store.state.violations.length) {
+    if (!this.$store.state.fileInfos.length) {
       this.dates = [
         this.$route.query.dt_from || new Date().toISOString().substr(0, 10),
         this.$route.query.dt_to || new Date().toISOString().substr(0, 10),

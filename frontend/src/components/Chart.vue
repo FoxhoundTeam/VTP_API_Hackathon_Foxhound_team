@@ -9,9 +9,9 @@ export default {
     return {
       options: {
         maintainAspectRatio: false,
-        legend: {
-          display: false,
-        },
+        // legend: {
+        //   display: false,
+        // },
         elements: {
           line: {
             fill: false,

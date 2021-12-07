@@ -1,7 +1,7 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="$store.state.violations"
+    :items="items"
     :items-per-page="3"
     class="elevation-1"
     dense
@@ -10,14 +10,14 @@
     <template v-slot:top>
       <v-row>
         <v-col cols="6">
-          <v-toolbar-title class="ml-5 mt-3">Нарушения</v-toolbar-title>
+          <v-toolbar-title class="ml-5 mt-3">{{tableName}}</v-toolbar-title>
         </v-col>
         <v-col cols="6">
           <v-spacer></v-spacer>
           <v-btn
             class="mx-1 float-right"
             icon
-            @click="$router.push({ name: 'Violation', query: {... $route.query} })"
+            @click="$router.push({ name: urlName, query: {... $route.query, ...urlQuery} })"
           >
             <v-icon color="gray"> open_in_full </v-icon>
           </v-btn>
@@ -29,17 +29,23 @@
 
 <script>
 export default {
-  data() {
-    return {
-      headers: [
-        {
-          text: "Время",
-          value: "dttm",
-        },
-        { text: "Клиент", value: "client" },
-        { text: "IP адрес", value: "source" },
-      ],
-    };
+  props: {
+    headers: {
+      type: Array,
+    },
+    items: {
+      type: Array,
+    },
+    tableName: {
+      type: String,
+    },
+    urlName: {
+      type: String,
+    },
+    urlQuery: {
+      type: Object,
+      default: Object,
+    }
   },
 };
 </script>

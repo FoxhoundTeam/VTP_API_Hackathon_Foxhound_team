@@ -93,6 +93,76 @@ let opts = {
       ]
     },
     {
+      path: "/file_info",
+      name: "FileInfo",
+      component: () => import('../views/FileInfoTable.vue'),
+      meta: {
+        requiresAuth: true
+      },
+      children: [
+        {
+          path: ":id/",
+          name: "FileInfoView",
+          component: () => import('../components/modals/FileInfoModal.vue'),
+          meta: {
+            requiresAuth: true
+          },
+        },
+      ]
+    },
+    {
+      path: "/file_proxy",
+      name: "FileProxy",
+      component: () => import('../views/FileProxyTable.vue'),
+      meta: {
+        requiresAuth: true
+      },
+      children: [
+        {
+          path: "create",
+          name: "FileProxyCreate",
+          component: () => import('../components/modals/FileProxyModal.vue'),
+          meta: {
+            requiresAuth: true
+          },
+        },
+        {
+          path: "edit/:id",
+          name: "FileProxyEdit",
+          component: () => import('../components/modals/FileProxyModal.vue'),
+          meta: {
+            requiresAuth: true
+          },
+        },
+      ]
+    },
+    {
+      path: "/allowed_file",
+      name: "AllowedFile",
+      component: () => import('../views/AllowedFileTable.vue'),
+      meta: {
+        requiresAuth: true
+      },
+      children: [
+        {
+          path: "create",
+          name: "AllowedFileCreate",
+          component: () => import('../components/modals/AllowedFileModal.vue'),
+          meta: {
+            requiresAuth: true
+          },
+        },
+        {
+          path: "edit/:id",
+          name: "AllowedFileEdit",
+          component: () => import('../components/modals/AllowedFileModal.vue'),
+          meta: {
+            requiresAuth: true
+          },
+        },
+      ]
+    },
+    {
       path: "/settings",
       name: "Settings",
       component: () => import('../views/Settings.vue'),

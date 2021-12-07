@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 from src.file.views import (
-    HTTPAllowedTypeViewSet,
+    AllowedFileViewSet,
     FileInfoViewSet,
     FilesProxyViewSet,
 )
@@ -9,7 +9,7 @@ from src.file.views import (
 router = routers.DefaultRouter()
 router.register(r'file', FileInfoViewSet, basename='FileInfo')
 router.register(r'files_proxy', FilesProxyViewSet, basename='FilesProxy')
-router.register(r'http_allowed_type', HTTPAllowedTypeViewSet, basename='HTTPAllowedType')
+router.register(r'allowed_file', AllowedFileViewSet, basename='HTTPAllowedType')
 
 
 urlpatterns = [

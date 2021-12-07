@@ -4,12 +4,12 @@
       :loading="loading"
       disable-sort
       class="elevation-1"
-      :items="$store.state.callbacks"
+      :items="$store.state.allowedFiles"
       :headers="headers"
       @click:row="
         (row) =>
           $router.push({
-            name: 'WebSocketCallbackEdit',
+            name: 'AllowedFileEdit',
             query: {
               ...$route.query,
             },
@@ -18,22 +18,16 @@
             },
           })
       "
-      :search="search"
     >
       <template v-slot:top>
         <v-row>
           <v-col cols="6">
             <v-toolbar-title class="ml-5 mt-3"
-              >Обратные вызовы WebSocket</v-toolbar-title
+              >Разрешенные файлы</v-toolbar-title
             >
           </v-col>
           <v-col cols="6">
             <div class="d-flex align-items-center justify-content-end">
-              <v-text-field
-                prepend-icon="search"
-                label="Поиск"
-                v-model="search"
-              ></v-text-field>
               <v-tooltip bottom open-delay="500">
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
@@ -43,7 +37,7 @@
                     icon
                     @click="
                       $router.push({
-                        name: 'WebSocketCallbackCreate',
+                        name: 'AllowedFileCreate',
                         query: {
                           ...$route.query,
                         },
@@ -59,6 +53,9 @@
           </v-col>
         </v-row>
       </template>
+      <template v-slot:item.max_size="{ item }">
+        <span>{{ `${item.max_size} ${sizes[item.size_mul]}` }}</span>
+      </template>
     </v-data-table>
     <router-view />
   </div>
@@ -68,14 +65,25 @@
 export default {
   data() {
     return {
+      sizes: {
+        1: "байт",
+        1024: "Кбайт",
+        1048576: "Мбайт",
+        1073741824: "Гбайт",
+        1099511627776: "Тбайт",
+      },
       headers: [
         {
-          text: "URL",
-          value: "callback_url",
+          text: "Тип файла",
+          value: "file_type",
         },
         {
-          text: "Метод",
-          value: "method",
+          text: "Максимальная глубина",
+          value: "max_depth",
+        },
+        {
+          text: "Максимальный размер",
+          value: "max_size",
         },
       ],
       loading: true,
@@ -84,8 +92,8 @@ export default {
   },
   async beforeMount() {
     this.loading = true;
-    if (this.$store.state.callbacks.length == 0) {
-      await this.$store.dispatch("setWebSocketCallbacks");
+    if (this.$store.state.allowedFiles.length == 0) {
+      await this.$store.dispatch("setAllowedFiles");
     }
     this.loading = false;
   },

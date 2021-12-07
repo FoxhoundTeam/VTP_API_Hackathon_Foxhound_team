@@ -2,6 +2,7 @@ import os
 import requests
 import json
 import jwt
+import re
 from datetime import datetime
 from flask import Flask, request, jsonify
 from sqlalchemy import Column, Integer, String, DateTime
@@ -76,9 +77,11 @@ class Violation(Base):
     dttm = Column(DateTime, nullable=False)
     dttm_added = Column(DateTime, server_default=func.now())
     dttm_modified = Column(DateTime, onupdate=func.now())
-    message = Column(String, nullable=False)
+    message = Column(String, nullable=True)
+    error_message = Column(String, nullable=False)
     source = Column(String(1024), nullable=False)
     client = Column(String, nullable=False)
+    type = Column(String(2), nullable=False)
 
 class WebSocketCallback(Base):
     __tablename__ = 'websocket_websocketcallback'
@@ -116,12 +119,71 @@ class ServerTokenAuth(BaseAuth):
     def authenticate(self):
         return self.token == SERVER_TOKEN
 
+def check_message(message :str, block_words=[]) -> bool :
+    regex_str = r'\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|OR|FROM|SET|UPDATE|UNION( +ALL){0,1})\b'
+    regex_xss = r'''<[^\w<>]*(?:[^<>"'\s]*:)?[^\w<>]*(?:\W*s\W*c\W*r\W*i\W*p\W*t|\W*f\W*o\W*r\W*m|\W*s\W*t\W*y\W*l\W*e|\W*s\W*v\W*g|
+    \W*m\W*a\W*r\W*q\W*u\W*e\W*e|(?:\W*l\W*i\W*n\W*k|\W*o\W*b\W*j\W*e\W*c\W*t|\W*e\W*m\W*b\W*e\W*d|\W*a\W*p\W*p\W*l\W*e\W*t|\W*p\W*a\W*r\W*a\W*m|
+    \W*i?\W*f\W*r\W*a\W*m\W*e|\W*b\W*a\W*s\W*e|\W*b\W*o\W*d\W*y|\W*m\W*e\W*t\W*a|\W*i\W*m\W*a?\W*g\W*e?|\W*v\W*i\W*d\W*e\W*o|\W*a\W*u\W*d\W*i\W*o|
+    \W*b\W*i\W*n\W*d\W*i\W*n\W*g\W*s|\W*s\W*e\W*t|\W*i\W*s\W*i\W*n\W*d\W*e\W*x|\W*a\W*n\W*i\W*m\W*a\W*t\W*e)[^>\w])|(?:<\w[\s\S]*[\s\0\/]|['"])(?:formaction|
+    style|background|src|lowsrc|ping|on(?:d(?:e(?:vice(?:(?:orienta|mo)tion|proximity|found|light)|livery(?:success|error)|activate)|
+    r(?:ag(?:e(?:n(?:ter|d)|xit)|(?:gestur|leav)e|start|drop|over)?|op)|i(?:s(?:c(?:hargingtimechange|onnect(?:ing|ed))|abled)|aling)|
+    ata(?:setc(?:omplete|hanged)|(?:availabl|chang)e|error)|urationchange|ownloading|blclick)|Moz(?:M(?:agnifyGesture(?:Update|Start)?|
+    ouse(?:PixelScroll|Hittest))|S(?:wipeGesture(?:Update|Start|End)?|crolledAreaChanged)|(?:(?:Press)?TapGestur|BeforeResiz)e|EdgeUI(?:C(?:omplet|
+    ancel)|Start)ed|RotateGesture(?:Update|Start)?|A(?:udioAvailable|fterPaint))|c(?:o(?:m(?:p(?:osition(?:update|start|end)|lete)|mand(?:update)?)|
+    n(?:t(?:rolselect|extmenu)|nect(?:ing|ed))|py)|a(?:(?:llschang|ch)ed|nplay(?:through)?|rdstatechange)|h(?:(?:arging(?:time)?ch)?ange|ecking)|
+    (?:fstate|ell)change|u(?:echange|t)|l(?:ick|ose))|m(?:o(?:z(?:pointerlock(?:change|error)|(?:orientation|time)change|fullscreen(?:change|error)|
+    network(?:down|up)load)|use(?:(?:lea|mo)ve|o(?:ver|ut)|enter|wheel|down|up)|ve(?:start|end)?)|essage|ark)|s(?:t(?:a(?:t(?:uschanged|echange)|
+    lled|rt)|k(?:sessione|comma)nd|op)|e(?:ek(?:complete|ing|ed)|(?:lec(?:tstar)?)?t|n(?:ding|t))|u(?:ccess|spend|bmit)|peech(?:start|end)|ound(?:start|
+    end)|croll|how)|b(?:e(?:for(?:e(?:(?:scriptexecu|activa)te|u(?:nload|pdate)|p(?:aste|rint)|c(?:opy|ut)|editfocus)|deactivate)|gin(?:Event)?)|
+    oun(?:dary|ce)|l(?:ocked|ur)|roadcast|usy)|a(?:n(?:imation(?:iteration|start|end)|tennastatechange)|fter(?:(?:scriptexecu|upda)te|print)|
+    udio(?:process|start|end)|d(?:apteradded|dtrack)|ctivate|lerting|bort)|DOM(?:Node(?:Inserted(?:IntoDocument)?|Removed(?:FromDocument)?)|
+    (?:CharacterData|Subtree)Modified|A(?:ttrModified|ctivate)|Focus(?:Out|In)|MouseScroll)|r(?:e(?:s(?:u(?:m(?:ing|e)|lt)|ize|et)|adystatechange|
+    pea(?:tEven)?t|movetrack|trieving|ceived)|ow(?:s(?:inserted|delete)|e(?:nter|xit))|atechange)|p(?:op(?:up(?:hid(?:den|ing)|show(?:ing|n))|state)|
+    a(?:ge(?:hide|show)|(?:st|us)e|int)|ro(?:pertychange|gress)|lay(?:ing)?)|t(?:ouch(?:(?:lea|mo)ve|en(?:ter|d)|cancel|start)|ime(?:update|out)|
+    ransitionend|ext)|u(?:s(?:erproximity|sdreceived)|p(?:gradeneeded|dateready)|n(?:derflow|load))|f(?:o(?:rm(?:change|input)|cus(?:out|in)?)|
+    i(?:lterchange|nish)|ailed)|l(?:o(?:ad(?:e(?:d(?:meta)?data|nd)|start)?|secapture)|evelchange|y)|g(?:amepad(?:(?:dis)?connected|button(?:down|
+    up)|axismove)|et)|e(?:n(?:d(?:Event|ed)?|abled|ter)|rror(?:update)?|mptied|xit)|i(?:cc(?:cardlockerror|infochange)|n(?:coming|valid|put))|
+    o(?:(?:(?:ff|n)lin|bsolet)e|verflow(?:changed)?|pen)|SVG(?:(?:Unl|L)oad|Resize|Scroll|Abort|Error|Zoom)|h(?:e(?:adphoneschange|l[dp])|ashchange|
+    olding)|v(?:o(?:lum|ic)e|ersion)change|w(?:a(?:it|rn)ing|heel)|key(?:press|down|up)|(?:AppComman|Loa)d|no(?:update|match)|Request|zoom))[\s\0]*='''
+    sql_comment_symbol = ['--',';']
+    bad_words_regex = r'\b('+ "|".join([x.lower() for x in block_words])+r')\b'
+
+    try:
+        if (re.findall(regex_str,message.upper())):
+            if sql_comment_symbol[0] in message or sql_comment_symbol[1] in message:
+                return False, 'SI', "SQLi is detected. Message aborted"
+        elif (re.findall(regex_xss,message)):
+            return False, 'X', "JS code detected, maybe XSS here"
+        elif (len(block_words) and re.findall(bad_words_regex,message.lower())):
+            return False, 'BW', "block words detected. Message aborted"
+        return True, 'OK', 'OK'
+    except Exception as e:
+        return False, 'U', str(e)
+
+def validate_str_fields(data):
+    valid, error_type, message = True, 'OK', 'OK'
+    if isinstance(data, list):
+        for v in data:
+            valid, error_type, message = validate_str_fields(v)
+            if not valid:
+                return valid, error_type, message
+    elif isinstance(data, dict):
+        for v in data.values():
+            valid, error_type, message = validate_str_fields(v)
+            if not valid:
+                return valid, error_type, message
+    elif isinstance(data, str):
+        return check_message(data)
+    
+    return valid, error_type, message
+
 def validate_message(data, method):
     schemas = WebSocketSchema.query.filter_by(method=method)
     
     validated = False
     error_messages = []
     error_messages = [f'Method {method} not allowed']
+    error_type = 'BM'
     for schema in schemas:
         error_messages = []
         try:
@@ -130,18 +192,24 @@ def validate_message(data, method):
             break
         except BaseException as e:
             error_messages.append(str(e))
+            error_type = 'IF'
             continue
+    if validated:
+        validated, error_type, message = validate_str_fields(data)
+        error_messages.append(message)
     
-    return validated, error_messages
+    return validated, error_messages, error_type
 
 def process_message(data, method, source, client, dttm):
-    is_valid, error_messages = validate_message(data, method)
+    is_valid, error_messages, error_type = validate_message(data, method)
 
     if not is_valid:
         Violation.add(
             Violation(
                 dttm=dttm, 
-                message="\n".join(error_messages), 
+                error_message="\n".join(error_messages), 
+                message=json.dumps(data),
+                type=error_type,
                 source=source, 
                 client=str(client),
                 dttm_added=func.now(),
@@ -168,7 +236,8 @@ def check_origin(origin, source, client, dttm):
         Violation.add(
             Violation(
                 dttm=dttm, 
-                message=f"Not allowed origin {origin}", 
+                error_message=f"Not allowed origin {origin}", 
+                type='BO',
                 source=source, 
                 client=str(client),
                 dttm_added=func.now(),

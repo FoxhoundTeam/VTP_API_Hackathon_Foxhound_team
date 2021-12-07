@@ -11,14 +11,21 @@
         ></short-statistics>
         <short-statistics
           class="my-4"
-          :data="$store.state.httpAllowedTypeCount"
-          type="Количество HTTP:"
+          :data="$store.state.allowedFileCount"
+          type="Количество разрешенных форматов:"
           color="#dbb838"
         ></short-statistics>
         <short-statistics
           class="my-4"
-          :data="$store.state.violationsCount"
-          type="Количество нарушений:"
+          :data="$store.state.wsViolationsCount"
+          type="Количество WS нарушений:"
+          icon="report_problem"
+          color="#d9544f"
+        ></short-statistics>
+        <short-statistics
+          class="my-4"
+          :data="$store.state.fileViolationsCount"
+          type="Количество файловых нарушений:"
           icon="report_problem"
           color="#d9544f"
         ></short-statistics>
@@ -31,8 +38,30 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="12">
-        <small-violators-table></small-violators-table>
+      <v-col cols="6">
+        <small-table
+          :headers="[
+            { text: 'Время', value: 'dttm' },
+            { text: 'Клиент', value: 'client' },
+            { text: 'IP адрес', value: 'source' },
+          ]"
+          :items="$store.state.violations"
+          :tableName="'WebSocket нарушения'"
+          :urlName="'Violation'"
+        />
+      </v-col>
+      <v-col cols="6">
+        <small-table
+          :headers="[
+            { text: 'Время', value: 'dttm_loaded' },
+            { text: 'Клиент', value: 'client' },
+            { text: 'IP адрес', value: 'source' },
+          ]"
+          :items="$store.state.fileInfos.filter(v => v.status == 'V')"
+          :tableName="'Файловые нарушения'"
+          :urlName="'FileInfo'"
+          :urlQuery='{onlyViolations: true}'
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -42,13 +71,13 @@
 import FilterDataCard from "../components/FilterDataCard.vue";
 import ShortStatistics from "../components/ShortStatistics.vue";
 import SmallChart from "../components/Chart.vue";
-import SmallViolatorsTable from "../components/SmallViolatorsTable.vue";
+import SmallTable from "../components/SmallTable.vue";
 export default {
   components: {
     FilterDataCard,
     ShortStatistics,
     SmallChart,
-    SmallViolatorsTable,
+    SmallTable,
   },
   data() {
     return {};
@@ -62,7 +91,11 @@ export default {
         this.$store.commit("setDates", value);
         this.$router.replace({
           name: this.$route.name,
-          query: { type: this.$store.state.periodType, dt_from: this.dates[0], dt_to: this.dates[1] },
+          query: {
+            type: this.$store.state.periodType,
+            dt_from: this.dates[0],
+            dt_to: this.dates[1],
+          },
         });
       },
     },
@@ -70,6 +103,7 @@ export default {
   watch: {
     async dates() {
       await this.$store.dispatch("setViolations");
+      await this.$store.dispatch("setFileInfo");
       await this.$store.dispatch("setChart");
     },
   },
@@ -82,12 +116,16 @@ export default {
       if (this.$route.query.type) {
         this.$store.commit("setPeriodType", Number(this.$route.query.type));
       }
-      if (this.$route.query.type == "4" || !this.$route.query.type || !this.dates.length) {
+      if (
+        this.$route.query.type == "4" ||
+        !this.$route.query.type ||
+        !this.dates.length
+      ) {
         this.dates = dates;
       }
 
       await this.$store.dispatch("setWebSocketSchemaStat");
-      await this.$store.dispatch("setHTTPAllowedTypeStat");
+      await this.$store.dispatch("setAllowedFileStat");
     }
   },
 };

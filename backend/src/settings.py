@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 import environ
 
@@ -88,6 +89,7 @@ REST_FRAMEWORK = {
 
 JWT_AUTH = {
     'JWT_SECRET_KEY': JWT_SECRET,
+    'JWT_EXPIRATION_DELTA': timedelta(minutes=30),
 }
 
 WSGI_APPLICATION = 'wsgi.application'
@@ -103,7 +105,7 @@ DATABASES = {
     }
 }
 
-EXTERNAL_HOST = env.str('EXTERNAL_HOST', default='localhost')
+EXTERNAL_HOST = env.str('EXTERNAL_HOST', default='http://localhost:8000')
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -158,7 +160,7 @@ CELERY_ROUTES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 

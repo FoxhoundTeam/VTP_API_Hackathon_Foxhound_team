@@ -12,8 +12,9 @@ const store = new Vuex.Store({
         isAuthenticated: false,
         violations: [],
         webSocketSchemaCount: null,
-        httpAllowedTypeCount: null,
-        violationsCount: null,
+        allowedFileCount: null,
+        wsViolationsCount: null,
+        fileViolationsCount: null,
         periodType: 1,
         dates: [],
         chart: {},
@@ -21,6 +22,8 @@ const store = new Vuex.Store({
         callbacks: [],
         wsAllowedOrigins: [],
         filesProxies: [],
+        fileInfos: [],
+        allowedFiles: [],
     },
     mutations: {
         setUser(state, user) {
@@ -35,8 +38,8 @@ const store = new Vuex.Store({
         setWebSocketCallbacks(state, callbacks) {
             state.callbacks = callbacks;
         },
-        setHTTPAllowedTypes(state, types) {
-            state.httpAllowedTypes = types;
+        setAllowedFiles(state, allowedFiles) {
+            state.allowedFiles = allowedFiles;
         },
         setPeriodType(state, periodType) {
             state.periodType = periodType;
@@ -44,20 +47,27 @@ const store = new Vuex.Store({
         setDates(state, dates) {
             state.dates = dates;
         },
-        setChart(state, chart){
+        setChart(state, chartData){
             state.chart = {
                 datasets: [
                     {
-                        label: 'Нарушения',
+                        label: 'Websocket Нарушения',
                         borderColor: '#f87979',
-                        data: chart,
+                        data: chartData.ws,
+                        tension: 0,
+                    },
+                    {
+                        label: 'Файловые нарушения',
+                        borderColor: '#0356fc',
+                        data: chartData.file,
                         tension: 0,
                     }
                 ]
             };
         },
-        setViolationsCount(state, violationsCount){
-            state.violationsCount = violationsCount;
+        setViolationsCount(state, count){
+            state.wsViolationsCount = count.ws;
+            state.fileViolationsCount = count.file;
         },
         setViolations(state, violations){
             state.violations = violations;
@@ -65,8 +75,8 @@ const store = new Vuex.Store({
         setWebSocketSchemaStat(state, stat) {
             state.webSocketSchemaCount = stat;
         },
-        setHTTPAllowedTypeStat(state, stat) {
-            state.httpAllowedTypeCount = stat;
+        setAllowedFileStat(state, stat) {
+            state.allowedFileCount = stat;
         },
         addViolation(state, violation) {
             state.violations.unshift(violation);
@@ -74,8 +84,11 @@ const store = new Vuex.Store({
         setWsAllowedOrigins(state, data){
             state.wsAllowedOrigins = data;
         },
-        setFilesProxies(state, data){
+        setFileProxies(state, data){
             state.filesProxies = data;
+        },
+        setFileInfo(state, info) {
+            state.fileInfos = info;
         }
     },
     actions: {
@@ -90,6 +103,19 @@ const store = new Vuex.Store({
         async setWsAllowedOrigins(context){
             let response = (await http.getList('WebSocketAllowedOrigin', {}, true)).data;
             context.commit('setWsAllowedOrigins', response);
+        },
+        async setFileProxies(context){
+            let response = (await http.getList('FileProxy', {}, true)).data;
+            context.commit('setFileProxies', response);
+        },
+        async setAllowedFiles(context){
+            let response = (await http.getList('AllowedFile', {}, true)).data;
+            context.commit('setAllowedFiles', response);
+        },
+        async setFileInfo(context){
+            let filters = {dt_from: context.state.dates[0], dt_to: context.state.dates[1]};
+            let response = (await http.getList('FileInfo', filters, true)).data;
+            context.commit('setFileInfo', response);
         },
         async setNewWsAllowedOrigins(context, origins) {
             let prev_origins = context.state.wsAllowedOrigins;
@@ -113,37 +139,16 @@ const store = new Vuex.Store({
                 return
             }
         },
-        async setNewFilesProxies(context, proxies) {
-            let prev_proxies = context.state.filesProxies;
-            let new_proxies = proxies.filter(x => prev_proxies.findIndex(v => v.proxy_url == x.proxy_url) < 0);
-            if (new_proxies.length){
-                for (var new_proxy of new_proxies){
-                    let response = (await http.createItem('FilesProxy', new_proxy, true)).data;
-                    prev_proxies.push(response)
-                }
-                context.commit('setFilesProxies', prev_proxies);
-                return
-            }
-            let deleted_proxies = prev_proxies.filter(x => proxies.findIndex(v => v.proxy_url == x.proxy_url) < 0);
-            if (deleted_proxies.length){
-                for (var deleted_proxy of deleted_proxies){
-                    await http.deleteItem('FilesProxy', deleted_proxy.id, true);
-                    let ind = prev_proxies.findIndex(x => x.id == deleted_proxy.id)
-                    prev_proxies.splice(ind, 1)
-                }
-                context.commit('setFilesProxies', prev_proxies);
-                return
-            }
-        },
         async setFilesProxies(context){
             let response = (await http.getList('FilesProxy', {}, true)).data;
             context.commit('setFilesProxies', response);
         },
         async setChart(context) {
             let filters = {dt_from: context.state.dates[0], dt_to: context.state.dates[1]};
-            let response = (await http.getList('Chart', filters, true)).data;
-            context.commit('setChart', response.data);
-            context.commit('setViolationsCount', response.count);
+            let ws_response = (await http.getList('WSChart', filters, true)).data;
+            let files_response = (await http.getList('FileChart', filters, true)).data;
+            context.commit('setChart', {ws: ws_response.data, file: files_response.data});
+            context.commit('setViolationsCount', {ws: ws_response.count, file: files_response.count});
         },
         async setViolations(context) {
             let filters = {dt_from: context.state.dates[0], dt_to: context.state.dates[1]};
@@ -154,9 +159,9 @@ const store = new Vuex.Store({
             let response = (await http.getList('WebSocketSchemaStat', {}, true)).data;
             context.commit('setWebSocketSchemaStat', response.count);
         },
-        async setHTTPAllowedTypeStat(context) {
-            let response = (await http.getList('HTTPAllowedTypeStat', {}, true)).data;
-            context.commit('setHTTPAllowedTypeStat', response.count);
+        async setAllowedFileStat(context) {
+            let response = (await http.getList('AllowedFileStat', {}, true)).data;
+            context.commit('setAllowedFileStat', response.count);
         },
         async addItem(context, data) {
             let item_data = data.data

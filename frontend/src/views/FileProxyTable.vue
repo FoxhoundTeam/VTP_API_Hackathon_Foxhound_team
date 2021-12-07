@@ -4,12 +4,12 @@
       :loading="loading"
       disable-sort
       class="elevation-1"
-      :items="$store.state.callbacks"
+      :items="$store.state.filesProxies"
       :headers="headers"
       @click:row="
         (row) =>
           $router.push({
-            name: 'WebSocketCallbackEdit',
+            name: 'FileProxyEdit',
             query: {
               ...$route.query,
             },
@@ -24,7 +24,7 @@
         <v-row>
           <v-col cols="6">
             <v-toolbar-title class="ml-5 mt-3"
-              >Обратные вызовы WebSocket</v-toolbar-title
+              >Файловые прокси</v-toolbar-title
             >
           </v-col>
           <v-col cols="6">
@@ -43,7 +43,7 @@
                     icon
                     @click="
                       $router.push({
-                        name: 'WebSocketCallbackCreate',
+                        name: 'FileProxyCreate',
                         query: {
                           ...$route.query,
                         },
@@ -71,11 +71,7 @@ export default {
       headers: [
         {
           text: "URL",
-          value: "callback_url",
-        },
-        {
-          text: "Метод",
-          value: "method",
+          value: "proxy_url",
         },
       ],
       loading: true,
@@ -84,8 +80,8 @@ export default {
   },
   async beforeMount() {
     this.loading = true;
-    if (this.$store.state.callbacks.length == 0) {
-      await this.$store.dispatch("setWebSocketCallbacks");
+    if (this.$store.state.filesProxies.length == 0) {
+      await this.$store.dispatch("setFileProxies");
     }
     this.loading = false;
   },

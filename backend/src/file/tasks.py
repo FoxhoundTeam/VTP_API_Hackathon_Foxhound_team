@@ -1,4 +1,6 @@
+import json
 import requests
+from datetime import datetime, timedelta
 
 from src.celery.celery import app
 from src.file.models import FileInfo, FilesProxy
@@ -6,21 +8,26 @@ from django.conf import settings
 
 
 @app.task
-def check_file(code):
-    file_obj = FileInfo.objects.get(code=code)
+def check_file(id):
+    file_obj = FileInfo.objects.get(id=id)
+    status = FileInfo.STATUS_OK
 
-    file = file_obj.file
+    try:
+        file = file_obj.file
+        # do some check stuff
+    except:
+        status = FileInfo.STATUS_ERROR
 
-    # do some check stuff
-
-    file_obj.status = FileInfo.STATUS_OK
+    file_obj.status = status
+    file_obj.dttm_end_check = datetime.now()
     file_obj.save()
     
 @app.task
-def send_file_link_to_proxy(file_code):
+def send_file_link_to_proxy(id):
     for proxy in FilesProxy.objects.all():
         requests.post(
             proxy.proxy_url, 
-            json={'url': f'{settings.EXTERNAL_HOST.rstrip("/")}/rest_api/file/{file_code}/'}
+            json={'url': f'{settings.EXTERNAL_HOST.rstrip("/")}/rest_api/file/{id}/'},
+            headers=json.loads(proxy.headers)
         )
 

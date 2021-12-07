@@ -9,7 +9,10 @@
       v-if="$store.state.isAuthenticated"
     >
       <v-list nav dense active-class="deep-purple--text text--accent-4">
-        <v-list-item link :to="{name: 'Dashboard', query: {...$route.query}}">
+        <v-list-item
+          link
+          :to="{ name: 'Dashboard', query: { ...$route.query } }"
+        >
           <v-list-item-icon>
             <v-icon>leaderboard</v-icon>
           </v-list-item-icon>
@@ -17,38 +20,71 @@
             <v-list-item-title>Дашборд</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
-        <v-list-item link :to="{name: 'Violation', query: {...$route.query}}">
-          <v-list-item-icon>
-            <v-icon>report_problem</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Нарушения</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item link to="/websocket">
-          <v-list-item-icon>
-            <v-icon>schema</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>Схемы WebSocket</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item link to="/websocket_callback">
-          <v-list-item-icon>
-            <v-icon>schema</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>WebSocket Callbacks</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item link to="/http">
-          <v-list-item-icon>
-            <v-icon>http</v-icon>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-title>HTTP</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
+        <v-list-group prepend-icon="mdi-cog-transfer">
+          <template v-slot:activator>
+            <v-list-item-title>WebSocket</v-list-item-title>
+          </template>
+
+          <v-list-item
+            link
+            :to="{ name: 'Violation', query: { ...$route.query } }"
+          >
+            <v-list-item-icon>
+              <v-icon>report_problem</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Нарушения</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item link to="/websocket">
+            <v-list-item-icon>
+              <v-icon>account_tree</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Схемы</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item link to="/websocket_callback">
+            <v-list-item-icon>
+              <v-icon>link</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Обратные вызовы</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+
+        <v-list-group prepend-icon="text_snippet">
+          <template v-slot:activator>
+            <v-list-item-title>Файлы</v-list-item-title>
+          </template>
+
+          <v-list-item link to="/file_info">
+            <v-list-item-icon>
+              <v-icon>fact_check</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Проверки</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item link to="/allowed_file">
+            <v-list-item-icon>
+              <v-icon>description</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Разрешенные файлы</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item link to="/file_proxy">
+            <v-list-item-icon>
+              <v-icon>link</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Прокси</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+
         <v-list-item link to="/settings">
           <v-list-item-icon>
             <v-icon>settings</v-icon>
