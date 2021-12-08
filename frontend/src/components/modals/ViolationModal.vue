@@ -24,9 +24,22 @@
             label="Клиент"
             readonly
           ></v-text-field>
+          <v-select
+            label="Тип нарушения"
+            :items="violation_types"
+            item-key="name"
+            item-value="value"
+            v-model="violation.type"
+            readonly
+          ></v-select>
+          <v-textarea
+            v-model="violation.error_message"
+            label="Причина нарушения"
+            readonly
+          ></v-textarea>
           <v-textarea
             v-model="violation.message"
-            label="Причина нарушения"
+            label="Оригинальное сообщение"
             readonly
           ></v-textarea>
         </v-card-text>
@@ -45,6 +58,15 @@ export default {
   data() {
     return {
       show: true,
+      violation_types: [
+        {name: "BO", value: "Bad origin"},
+        {name: "BM", value: "Bad method"},
+        {name: "SI", value: "SQL injection"},
+        {name: "X", value: "XSS attack"},
+        {name: "BW", value: "Bad word"},
+        {name: "IF", value: "Invalid message format"},
+        {name: "U", value: "Unknown exception"},
+      ]
     };
   },
   computed: {
