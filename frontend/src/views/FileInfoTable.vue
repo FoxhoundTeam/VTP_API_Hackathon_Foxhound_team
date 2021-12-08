@@ -92,7 +92,7 @@ export default {
     },
     onlyViolations: {
       get() {
-        return this.$route.query.onlyViolations == 'true';
+        return String(this.$route.query.onlyViolations) == 'true';
       },
       set(value) {
         this.$router.replace({

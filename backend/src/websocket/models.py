@@ -45,7 +45,7 @@ class WebSocketViolation(models.Model):
     dttm_added = models.DateTimeField(auto_now_add=True)
     dttm_modified = models.DateTimeField(auto_now=True)
     message = models.TextField(null=True, blank=True)
-    error_message = models.TextField()
+    error_message = models.TextField(null=True, blank=True)
     source = models.CharField(max_length=1024)
     client = models.TextField()
     type = models.CharField(max_length=2, choices=TYPES, default=TYPE_UNKNOWN_ECXEPTION)

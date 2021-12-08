@@ -27,7 +27,7 @@
           <v-select
             label="Тип нарушения"
             :items="violation_types"
-            item-key="name"
+            item-text="name"
             item-value="value"
             v-model="violation.type"
             readonly
@@ -59,13 +59,13 @@ export default {
     return {
       show: true,
       violation_types: [
-        {name: "BO", value: "Bad origin"},
-        {name: "BM", value: "Bad method"},
-        {name: "SI", value: "SQL injection"},
-        {name: "X", value: "XSS attack"},
-        {name: "BW", value: "Bad word"},
-        {name: "IF", value: "Invalid message format"},
-        {name: "U", value: "Unknown exception"},
+        {value: "BO", name: "Bad origin"},
+        {value: "BM", name: "Bad method"},
+        {value: "SI", name: "SQL injection"},
+        {value: "X", name: "XSS attack"},
+        {value: "BW", name: "Bad word"},
+        {value: "IF", name: "Invalid message format"},
+        {value: "U", name: "Unknown exception"},
       ]
     };
   },
