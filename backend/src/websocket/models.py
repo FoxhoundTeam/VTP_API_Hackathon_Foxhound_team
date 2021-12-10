@@ -30,6 +30,7 @@ class WebSocketViolation(models.Model):
     TYPE_BAD_WORD = 'BW'
     TYPE_INVALID_FORMAT = 'IF'
     TYPE_UNKNOWN_ECXEPTION = 'U'
+    TYPE_FLK = 'FL'
 
     TYPES = [
         (TYPE_BAD_ORIGIN, 'Bad origin'),
@@ -39,6 +40,7 @@ class WebSocketViolation(models.Model):
         (TYPE_BAD_WORD, 'Bad word'),
         (TYPE_INVALID_FORMAT, 'Invalid message format'),
         (TYPE_UNKNOWN_ECXEPTION, 'Unknown exception'),
+        (TYPE_FLK, 'FLK'),
     ]
 
     dttm = models.DateTimeField()

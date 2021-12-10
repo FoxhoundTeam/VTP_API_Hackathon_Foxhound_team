@@ -13,6 +13,7 @@ __pycache__
 db
 test_flask_server
 mounts
+kub
 
 # Log files
 npm-debug.log*

@@ -147,6 +147,16 @@ def check_message(message :str, block_words=[]) -> bool :
     olding)|v(?:o(?:lum|ic)e|ersion)change|w(?:a(?:it|rn)ing|heel)|key(?:press|down|up)|(?:AppComman|Loa)d|no(?:update|match)|Request|zoom))[\s\0]*='''
     sql_comment_symbol = ['--',';']
     bad_words_regex = r'\b('+ "|".join([x.lower() for x in block_words])+r')\b'
+    banks_bins = ['522223','424436','521178','548673','548601','45841','415428','676371','477964','419152','525477','443888','446958',
+    '427229','46223','527883','447520','548999','526483','523526','484157','511738','404757','469395','532315','544067','434914','525477',
+    '405992','525744','554373','465203','416792','465204','548265','533736','540616','520905','440503','554761','485078','513691','427683','63900',
+    '67758','427901','5469','427644','427601','427901','427631','531687','516331','521324','445435','518901']
+    regex_dict = {"СНИЛС": r"\d{3}-\d{3}-\d{3} \d{2}" , 
+                  "Номер банковской карты": r"""(?<!\d)\d{16}(?!\d)|(?<!\d[ _-])(?<!\d)\d{4}(?:[_ -]\d{4}){3}(?![_ -]?\d)""" ,
+                #   "Код подразделения паспорта": r"\d{3}-\d{3}",
+                  "Серия номер паспорта РФ": r"\d{4}\s\d{6}",
+                  "Адрес электронной почты": r"[a-zA-Z1-9\-\._]+@[a-z1-9]+(.[a-z1-9]+){1,}",
+                  "ФИО": r"([А-ЯЁ][а-яё]+[\-\s]?){3,}"}
 
     try:
         if (re.findall(regex_str,message.upper())):
@@ -156,6 +166,13 @@ def check_message(message :str, block_words=[]) -> bool :
             return False, 'X', "JS code detected, maybe XSS here"
         elif (len(block_words) and re.findall(bad_words_regex,message.lower())):
             return False, 'BW', "block words detected. Message aborted"
+        for key,value in regex_dict.items():
+            if re.findall(value,message):
+                if key == "Номер банковской карты":
+                    for x in banks_bins:
+                        if x in message.strip():
+                            return False, "FL", f"Detected possible transfer of personal data: {key} \nPossible BIN detected"
+                return False, "FL", f"Detected possible transfer of personal data: {key}"
         return True, 'OK', 'OK'
     except Exception as e:
         return False, 'U', str(e)
