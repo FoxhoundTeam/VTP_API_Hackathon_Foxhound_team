@@ -227,7 +227,7 @@ def process_message(data, method, source, client, dttm):
             Violation(
                 dttm=dttm, 
                 error_message="\n".join(error_messages), 
-                message=json.dumps(data),
+                message=json.dumps(data, ensure_ascii=False),
                 type=error_type,
                 source=source, 
                 client=str(client),
@@ -286,8 +286,10 @@ def handle_message(message):
     addr = request.headers.get('http-x-forwarded-for', '').split(',')[0] if request.headers.get('http-x-forwarded-for') else request.remote_addr
     if not process_message(message.get('payload'), message.get('method'), addr, client_data, datetime.now()):
         # do some info staff
+        print('bad message', message)
         disconnect()
         raise ConnectionRefusedError('Bad message')
+    print('message ok')
     send_message(message.get('payload'), message.get('method'), client_data)
 
 @app.route('/api', methods=['post'])
