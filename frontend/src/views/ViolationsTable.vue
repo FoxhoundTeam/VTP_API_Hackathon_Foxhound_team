@@ -61,6 +61,7 @@ export default {
         BW: "Bad word",
         IF: "Invalid message format",
         U: "Unknown exception",
+        FL: "Personal data detected",
       },
       headers: [
         {

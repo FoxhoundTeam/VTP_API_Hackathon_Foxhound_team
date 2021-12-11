@@ -66,6 +66,7 @@ export default {
         {value: "BW", name: "Bad word"},
         {value: "IF", name: "Invalid message format"},
         {value: "U", name: "Unknown exception"},
+        {value: "FL", name: "Personal data detected"},
       ]
     };
   },

@@ -268,7 +268,8 @@ def check_origin(origin, source, client, dttm):
 
 @socketio.on('connect')
 def connect():
-    if not check_origin(request.origin, request.remote_addr, request.args.get('token'), datetime.now()):
+    addr = request.headers.get('http-x-forwarded-for', '').split(',')[0] if request.headers.get('http-x-forwarded-for') else request.remote_addr
+    if not check_origin(request.origin, addr, request.args.get('token'), datetime.now()):
         disconnect()
         raise ConnectionRefusedError('Bad origin')
     authenticated, _ = JWTAuth(request.args.get('token', '')).authenticate()
@@ -282,7 +283,8 @@ def handle_message(message):
     if not authenticated:
         disconnect()
         raise ConnectionRefusedError('Unathorized')
-    if not process_message(message.get('payload'), message.get('method'), request.remote_addr, client_data, datetime.now()):
+    addr = request.headers.get('http-x-forwarded-for', '').split(',')[0] if request.headers.get('http-x-forwarded-for') else request.remote_addr
+    if not process_message(message.get('payload'), message.get('method'), addr, client_data, datetime.now()):
         # do some info staff
         disconnect()
         raise ConnectionRefusedError('Bad message')
