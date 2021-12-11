@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
+    'corsheaders',
     'rest_auth',
     'rest_framework.authtoken',
     'src',
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'src.urls'
@@ -94,6 +96,9 @@ JWT_AUTH = {
 
 WSGI_APPLICATION = 'wsgi.application'
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8080',
+]
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
